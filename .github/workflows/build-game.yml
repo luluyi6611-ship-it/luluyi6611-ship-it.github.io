@@ -1,0 +1,29 @@
+name: Build 合成宁宁酱
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build:
+    if: github.event.head_commit.message == 'Add custom game assets'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build customized game
+        run: |
+          set -e
+          mkdir -p /tmp/ningning-assets
+          cp -a res/raw-assets /tmp/ningning-assets/
+          git clone --depth 1 https://github.com/liyupi/daxigua.git /tmp/daxigua
+          rsync -a --exclude='.git' /tmp/daxigua/ ./
+          cp -a /tmp/ningning-assets/raw-assets/. res/raw-assets/
+          sed -i 's/合成大西瓜/合成宁宁酱/g' index.html src/extraSettings.js
+          sed -i '/imasdk.googleapis.com/d; /src="ads.js"/d' index.html
+          sed -i "s|let adLink = .*|let adLink = false;|" src/extraSettings.js
+          touch .nojekyll
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build 合成宁宁酱 site"
+          git push
